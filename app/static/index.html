@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI YouTube Clipper</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #0b1020; color: #edf1ff; }
+    main { width: min(760px, calc(100% - 32px)); margin: 64px auto; }
+    .eyebrow { color: #8da5ff; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 12px 0; font-size: clamp(32px, 7vw, 52px); letter-spacing: -.04em; }
+    p { color: #aab4d0; line-height: 1.6; }
+    .panel { margin-top: 28px; padding: 24px; border: 1px solid #273252; border-radius: 18px; background: #121a30; }
+    .status { display: inline-flex; align-items: center; gap: 8px; color: #aab4d0; font-size: 13px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #e7b75b; }
+    .steps { display: grid; gap: 12px; margin-top: 22px; }
+    .step { padding: 14px 16px; border-radius: 12px; background: #0d1427; border: 1px solid #202b49; }
+    .step strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    .step span { color: #9eabc9; font-size: 13px; }
+    footer { margin-top: 24px; color: #74809d; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Personal workspace · Local processing</div>
+    <h1>Find the moments<br>worth clipping.</h1>
+    <p>Your own AI-assisted video clipper. Videos and processing stay on your computer; no paid AI API is required.</p>
+    <section class="panel">
+      <div class="status"><span class="dot"></span><span id="status">Checking local app…</span></div>
+      <div class="steps">
+        <div class="step"><strong>1. Add a video</strong><span>Paste a permitted video URL or choose a local file.</span></div>
+        <div class="step"><strong>2. Find strong moments</strong><span>Transcribe and rank sections using local tools.</span></div>
+        <div class="step"><strong>3. Export clips</strong><span>Create vertical 9:16 clips with captions.</span></div>
+      </div>
+    </section>
+    <footer>Early build · Your video files will not be uploaded to GitHub.</footer>
+  </main>
+  <script>
+    fetch('/api/health')
+      .then(response => response.json())
+      .then(data => { document.getElementById('status').textContent = data.status === 'ok' ? 'Local app is running' : 'App needs attention'; })
+      .catch(() => { document.getElementById('status').textContent = 'Could not reach the local app'; });
+  </script>
+</body>
+</html>
