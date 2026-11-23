@@ -1,24 +1,26 @@
 # AI YouTube Clipper
 
-A local-first personal tool for finding and exporting short clips from videos you own or have permission to process.
+A personal AI-assisted YouTube clipping project, starting with a cloud-hosted prototype.
 
-## Zero-cost approach
+## Current cloud prototype
 
-- Python + FastAPI for the local interface
-- FFmpeg for cutting and formatting clips
-- yt-dlp for permitted public video downloads
-- faster-whisper for local transcription
-- No paid APIs or subscriptions
+- Vercel hosts the website and Python API.
+- Paste a public YouTube video URL to inspect its title, channel, duration, thumbnail, and whether captions are available.
+- The API uses yt-dlp metadata extraction with downloads disabled.
+- The next stages are transcript retrieval, clip-moment suggestions, and short vertical exports.
 
-Video processing runs on your own computer. GitHub stores the source code only; it does not process or host your videos.
+## Deploy to Vercel (free Hobby plan)
 
-## Requirements
+1. Import `juniorprincemhelem/ai-youtube-clipper` into Vercel.
+2. Keep the project root as the repository root.
+3. Use the included `vercel.json`; no build command or environment variables are required for the current prototype.
+4. Deploy, then open the generated Vercel URL.
 
-- Windows 10/11
-- Python 3.10+
-- FFmpeg installed and available on PATH
+The project is configured as a Python serverless function. Function duration, memory, bandwidth, and other plan limits apply. YouTube may also block automated access or require additional verification, so inspection is not guaranteed for every video.
 
-## Run locally
+## Run locally (optional)
+
+Requirements: Windows 10/11 and Python 3.10+.
 
 ```powershell
 py -m venv .venv
@@ -30,8 +32,11 @@ uvicorn app.main:app --reload
 
 Open http://127.0.0.1:8000.
 
-## Current status
+## Planned features
 
-Starter scaffold. Video intake, transcription, moment ranking and clip export will be added in stages.
+1. Retrieve captions/transcripts where available.
+2. Rank interesting sections and suggest clip start/end times.
+3. Render vertical 9:16 clips with subtitles.
+4. Add a local-processing fallback for jobs that exceed free serverless limits.
 
 Only process videos you own or have permission to use. Respect copyright and platform terms; do not bypass DRM or access controls.
