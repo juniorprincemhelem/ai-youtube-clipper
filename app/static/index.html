@@ -27,6 +27,15 @@
     .result img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 9px; background: #1a2540; }
     .result h2 { margin: 0 0 8px; font-size: 17px; }
     .meta { margin: 5px 0; font-size: 12px; color: #aab4d0; }
+    .analyze-btn { min-height: 44px; margin-top: 14px; padding: 0 16px; }
+    .clip-list { display: grid; gap: 12px; margin-top: 16px; }
+    .clip { padding: 16px; border: 1px solid #30436b; border-radius: 14px; background: #101b34; }
+    .clip h3 { margin: 0 0 8px; font-size: 16px; }
+    .clip-time { color: #a9baff; font-size: 12px; font-weight: 800; }
+    .clip p { margin: 8px 0; font-size: 13px; }
+    .clip-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .clip-actions button { min-height: 36px; padding: 0 12px; font-size: 12px; }
+    .secondary { background: #26385f; color: #dce4ff; }
     .pill { display: inline-block; margin: 8px 6px 0 0; padding: 5px 8px; border-radius: 999px; background: #1c2a4c; color: #b9c8ff; font-size: 11px; }
     .steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 22px; }
     .step { padding: 14px; border-radius: 12px; background: #0d1427; border: 1px solid #202b49; }
@@ -70,6 +79,46 @@
       const s = Math.floor(seconds);
       return Math.floor(s / 60) + 'm ' + (s % 60) + 's';
     };
+    const formatTime = seconds => {
+      const value = Math.max(0, Math.floor(Number(seconds) || 0));
+      return String(Math.floor(value / 60)).padStart(2, '0') + ':' + String(value % 60).padStart(2, '0');
+    };
+    async function analyzeCurrentVideo() {
+      const analyzeButton = document.getElementById('analyze-btn');
+      const clipResults = document.getElementById('clip-results');
+      if (!analyzeButton || !clipResults) return;
+      analyzeButton.disabled = true;
+      analyzeButton.textContent = 'Finding moments…';
+      clipResults.innerHTML = '<p>Getting captions and asking Gemini to find the strongest moments. This may take a little while.</p>';
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({url: input.value.trim()})
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'AI analysis failed.');
+        if (!data.clips || data.clips.length === 0) {
+          clipResults.innerHTML = '<p>No strong clip suggestions were found in this transcript.</p>';
+          return;
+        }
+        const cards = data.clips.map((clip, index) =>
+          '<article class="clip"><div class="clip-time">CLIP ' + (index + 1) + ' · ' +
+          formatTime(clip.start_seconds) + ' – ' + formatTime(clip.end_seconds) +
+          ' (' + escapeHtml(clip.duration_seconds) + ' sec)</div><h3>' + escapeHtml(clip.title) +
+          '</h3><p><strong>Hook:</strong> ' + escapeHtml(clip.hook) +
+          '</p><p>' + escapeHtml(clip.reason) + '</p><p><strong>Caption:</strong> ' +
+          escapeHtml(clip.caption) + '</p><p class="meta">' +
+          (clip.hashtags || []).map(escapeHtml).join(' ') + '</p></article>'
+        ).join('');
+        clipResults.innerHTML = '<div class="clip-list">' + cards + '</div><p class="hint">These are AI-selected timestamps. Actual video cutting and downloading will be added next.</p>';
+      } catch (error) {
+        clipResults.innerHTML = '<p class="error">' + escapeHtml(error.message) + '</p>';
+      } finally {
+        analyzeButton.disabled = false;
+        analyzeButton.textContent = 'Find my best clips with AI';
+      }
+    }
     form.addEventListener('submit', async event => {
       event.preventDefault();
       feedback.innerHTML = '<p>Inspecting video… this can take a little while.</p>';
@@ -89,7 +138,10 @@
           '<p class="meta">' + escapeHtml(data.channel) + ' · ' + escapeHtml(duration(data.duration_seconds)) + '</p>' +
           '<span class="pill">' + (data.manual_captions_available ? 'Manual captions found' : 'No manual captions detected') + '</span>' +
           '<span class="pill">' + (data.automatic_captions_available ? 'Auto captions found' : 'No auto captions detected') + '</span>' +
-          '<p class="meta">' + escapeHtml(data.message) + '</p></div></div>';
+          '<p class="meta">' + escapeHtml(data.message) + '</p>' +
+          '<button class="analyze-btn" id="analyze-btn" type="button">Find my best clips with AI</button></div></div>' +
+          '<div id="clip-results" aria-live="polite"></div>';
+        document.getElementById('analyze-btn').addEventListener('click', analyzeCurrentVideo);
       } catch (error) {
         feedback.innerHTML = '<p class="error">' + escapeHtml(error.message) + '</p>';
       } finally {
